@@ -1,10 +1,11 @@
 function plot_accuracy_keyframe
+opt = globals();
 
-color = {'r', 'y', 'g', 'b', 'm'};
-leng = {'PoseCNN', 'PoseCNN+ICP', 'PoseCNN+Multiview', 'PoseCNN+ICP+Multiview', ...
-    '3D Coordinate Regression'};
-aps = zeros(5, 1);
-lengs = cell(5, 1);
+leng = {'PoseCNN', 'PoseCNN+ICP', 'PoseCNN+Multiview', 'PoseCNN+ICP+Multiview'};
+leng = [leng opt.methods]; % additional methods
+aps = zeros(length(leng), 1);
+lengs = cell(length(leng), 1);
+color = jet(length(leng));
 close all;
 
 % load results
@@ -15,7 +16,12 @@ rotations = object.errors_rotation;
 translations = object.errors_translation;
 cls_ids = object.results_cls_id;
 
-index_plot = [4, 2, 5, 3, 1];
+index_plot = (1:length(leng)); %[4, 2, 5, 3, 1];
+fprintf('object, ');
+for i = index_plot
+    fprintf('%s, ', leng{i});
+end 
+fprintf('\n');
 
 % read class names
 fid = fopen('classes.txt', 'r');
@@ -25,8 +31,9 @@ classes{end+1} = 'All 21 objects';
 fclose(fid);
 
 hf = figure('units','normalized','outerposition',[0 0 1 1]);
-font_size = 24;
+font_size = 12;
 max_distance = 0.1;
+LineWidth = 2;
 
 % for each class
 for k = 1:numel(classes)
@@ -34,6 +41,7 @@ for k = 1:numel(classes)
     if isempty(index)
         index = 1:size(distances_sys,1);
     end
+    fprintf('%s, ', classes{k});
 
     % distance symmetry
     subplot(2, 2, 1);
@@ -43,11 +51,14 @@ for k = 1:numel(classes)
         d = sort(D);
         n = numel(d);
         accuracy = cumsum(ones(1, n)) / n;        
-        plot(d, accuracy, color{i}, 'LineWidth', 4);
+        plot(d, accuracy, 'Color', color(i, :), 'LineWidth', LineWidth);
         aps(i) = VOCap(d, accuracy);
         lengs{i} = sprintf('%s (%.2f)', leng{i}, aps(i) * 100);
+        fprintf('%.1f, ', aps(i) * 100);
         hold on;
-    end
+    end    
+    fprintf('\n');
+    
     hold off;
     %h = legend('network', 'refine tranlation only', 'icp', 'stereo translation only', 'stereo full', '3d coordinate');
     %set(h, 'FontSize', 16);
@@ -70,7 +81,7 @@ for k = 1:numel(classes)
         d = sort(D);
         n = numel(d);
         accuracy = cumsum(ones(1, n)) / n;
-        plot(d, accuracy, color{i}, 'LineWidth', 4);
+        plot(d, accuracy, 'Color', color(i, :), 'LineWidth', LineWidth);
         aps(i) = VOCap(d, accuracy);
         lengs{i} = sprintf('%s (%.2f)', leng{i}, aps(i) * 100);        
         hold on;
@@ -96,7 +107,7 @@ for k = 1:numel(classes)
         d = sort(D);
         n = numel(d);
         accuracy = cumsum(ones(1, n)) / n;
-        plot(d, accuracy, color{i}, 'LineWidth', 4);
+        plot(d, accuracy, 'Color', color(i, :), 'LineWidth', LineWidth);
         hold on;
     end
     hold off;
@@ -121,7 +132,7 @@ for k = 1:numel(classes)
         d = sort(D);
         n = numel(d);
         accuracy = cumsum(ones(1, n)) / n;
-        plot(d, accuracy, color{i}, 'LineWidth', 4);
+        plot(d, accuracy, 'Color', color(i, :), 'LineWidth', LineWidth);
         hold on;
     end
     hold off;

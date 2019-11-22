@@ -1,6 +1,6 @@
 function opt = globals()
 
-opt.root = '/home/yuxiang/mnt1/yuxiang/YCB_Video_Dataset';
+opt.root = '/mnt/data1/dataset/object_pose/YCB_Video_Dataset';
 opt.num_classes = 21;
 
 opt.seq_num = 92;
@@ -33,3 +33,6 @@ opt.class_colors = uint8([255, 255, 255; 255, 0, 0; 0, 255, 0; 0, 0, 255; 255, 2
                       128, 0, 0; 0, 128, 0; 0, 0, 128; 128, 128, 0; 128, 0, 128; 0, 128, 128;
                       64, 0, 0; 0, 64, 0; 0, 0, 64; 64, 64, 0; 64, 0, 64; 0, 64, 64; 
                       192, 0, 0; 0, 192, 0; 0, 0, 192]);
+opt.methods = {
+        '3DCoordinate', 'PoseCNN_RSS2018', 'Densefusion_wo_refine_result', 'Densefusion_iterative_result'
+};

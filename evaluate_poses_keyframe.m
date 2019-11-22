@@ -23,11 +23,16 @@ C = textscan(fid, '%s');
 keyframes = C{1};
 fclose(fid);
 
+% additional methods
+methods = opt.methods;
+
+total_methods = 4 + length(methods);
+
 % save results
-distances_sys = zeros(100000, 5);
-distances_non = zeros(100000, 5);
-errors_rotation = zeros(100000, 5); 
-errors_translation = zeros(100000, 5);
+distances_sys = zeros(100000, total_methods);
+distances_non = zeros(100000, total_methods);
+errors_rotation = zeros(100000, total_methods); 
+errors_translation = zeros(100000, total_methods);
 results_seq_id = zeros(100000, 1);
 results_frame_id = zeros(100000, 1);
 results_object_id = zeros(100000, 1);
@@ -44,12 +49,12 @@ for i = 1:numel(keyframes)
     frame_id = str2double(name(pos+1:end));
             
     % load PoseCNN result
-    filename = sprintf('results_PoseCNN/%04d.mat', i - 1);
+    filename = sprintf('results/PoseCNN/%04d.mat', i - 1);
     result = load(filename);
 
-    % load 3D coordinate regression result
-    filename = sprintf('results_3DCoordinate/%04d.mat', i - 1);
-    result_3DCoordinate = load(filename);
+%     % load 3D coordinate regression result
+%     filename = sprintf('results/3DCoordinate/%04d.mat', i - 1);
+%     result_3DCoordinate = load(filename);
 
     % load gt poses
     filename = fullfile(opt.root, 'data', sprintf('%04d/%06d-meta.mat', seq_id, frame_id));
@@ -112,20 +117,25 @@ for i = 1:numel(keyframes)
 
 
         % 3D Coordinate regression result
-        roi_index = find(result_3DCoordinate.rois(:, 2) == cls_index);
-        if isempty(roi_index) == 0
-            RT = zeros(3, 4);
-            RT(1:3, 1:3) = quat2rotm(result_3DCoordinate.poses(roi_index, 1:4));
-            RT(:, 4) = result_3DCoordinate.poses(roi_index, 5:7);
-            distances_sys(count, 5) = adi(RT, RT_gt, models{cls_index}');
-            distances_non(count, 5) = add(RT, RT_gt, models{cls_index}');
-            errors_rotation(count, 5) = re(RT(1:3, 1:3), RT_gt(1:3, 1:3));
-            errors_translation(count, 5) = te(RT(:, 4), RT_gt(:, 4));                    
-        else
-            distances_sys(count, 5) = inf;
-            distances_non(count, 5) = inf;
-            errors_rotation(count, 5) = inf;
-            errors_translation(count, 5) = inf;
+        for k=1:length(methods)
+            cur_method = methods{k};
+            filename = sprintf('results/%s/%04d.mat', cur_method, i - 1);
+            cur_result = load(filename);
+            roi_index = find(cur_result.rois(:, 2) == cls_index);
+            if isempty(roi_index) == 0
+                RT = zeros(3, 4);
+                RT(1:3, 1:3) = quat2rotm(cur_result.poses(roi_index, 1:4));
+                RT(:, 4) = cur_result.poses(roi_index, 5:7);
+                distances_sys(count, 4+k) = adi(RT, RT_gt, models{cls_index}');
+                distances_non(count, 4+k) = add(RT, RT_gt, models{cls_index}');
+                errors_rotation(count, 4+k) = re(RT(1:3, 1:3), RT_gt(1:3, 1:3));
+                errors_translation(count, 4+k) = te(RT(:, 4), RT_gt(:, 4));                    
+            else
+                distances_sys(count, 4+k) = inf;
+                distances_non(count, 4+k) = inf;
+                errors_rotation(count, 4+k) = inf;
+                errors_translation(count, 4+k) = inf;
+            end
         end
     end
 end
